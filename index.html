@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>أدومُها</title>
+<meta name="theme-color" content="#1c5b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="أدومُها">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  html,body{margin:0;height:100%;background:#f5efe3;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;color:#1d2927}
+  #frame{position:fixed;inset:0;width:100%;height:100%;border:0;display:none;background:#f5efe3}
+  #load{position:fixed;inset:0;display:grid;place-items:center;background:#f5efe3;z-index:5;transition:opacity .4s}
+  #load img{width:96px;height:96px;border-radius:24px;box-shadow:0 8px 30px rgba(18,63,57,.25);animation:b 1.6s ease-in-out infinite}
+  #load p{text-align:center;color:#6f7773;font-size:14px;margin-top:14px}
+  @keyframes b{50%{transform:scale(1.05)}}
+  .card{max-width:420px;margin:0 auto;padding:28px 20px calc(28px + env(safe-area-inset-bottom))}
+  .card img{width:88px;height:88px;border-radius:22px;display:block;margin:30px auto 10px}
+  h1{text-align:center;margin:0 0 4px;font-size:26px}
+  .sub{text-align:center;color:#1c5b52;margin:0 0 22px}
+  input{width:100%;box-sizing:border-box;border:1.5px solid #e5dccb;background:#fffcf6;border-radius:12px;padding:12px;font-size:16px;direction:ltr}
+  button{width:100%;margin-top:12px;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:600;background:#1c5b52;color:#fff}
+  .muted{color:#6f7773;font-size:13px;line-height:1.7}
+  #setup{display:none}
+  #hint{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9;background:#1d2927;color:#f5efe3;border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.7;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  #hint b{color:#efc260}
+  #hint .x{position:absolute;top:8px;left:12px;background:none;border:0;color:#f5efe3;font-size:20px;width:auto;margin:0;padding:4px}
+  #hint button.inst{background:#c08a24;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="load"><div><img src="icon-192.png" alt=""><p>أدومُها</p></div></div>
+
+<div id="setup" class="card">
+  <img src="icon-192.png" alt="">
+  <h1>أدومُها</h1>
+  <p class="sub">«أحبُّ الأعمالِ إلى اللهِ أدومُها وإن قلّ»</p>
+  <p class="muted">الصق رابط الموقع مرة واحدة (الرابط الذي ينتهي بـ exec)، أو افتح صفحة التثبيت من الرابط الذي أرسله لك صاحب الموقع.</p>
+  <input id="url" placeholder="https://script.google.com/macros/s/…/exec">
+  <button id="save">متابعة</button>
+</div>
+
+<div id="hint"><button class="x" id="hx">×</button><div id="htx"></div></div>
+
+<iframe id="frame" allow="clipboard-write; web-share" title="أدومُها"></iframe>
+
+<script>
+(function () {
+  var KEY = 'adw_site', KKEY = 'adw_k';
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+
+  // ملف التعريف: على آيفون لا يُربط حتى يحفظ الجوال الرابط بمعاملاته
+  if (!isIOS) { var l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); }
+
+  function getCookie(n) { var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : ''; }
+  function setCookie(n, v) { document.cookie = n + '=' + encodeURIComponent(v) + ';max-age=' + (3600 * 24 * 400) + ';path=/;SameSite=Lax'; }
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { } setCookie(k, v); }
+  function read(k) { var v = ''; try { v = localStorage.getItem(k) || ''; } catch (e) { } return v || getCookie(k); }
+  function clean(u) {
+    u = String(u || '').trim();
+    if (!u) return '';
+    if (/^AKfy[\w-]+$/.test(u)) u = 'https://script.google.com/macros/s/' + u + '/exec';
+    var m = u.match(/^https:\/\/script\.google\.com\/(?:a\/[^/]+\/)?macros\/s\/[\w-]+\/(?:exec|dev)/);
+    return m ? m[0] : '';
+  }
+
+  var q = new URLSearchParams(location.search);
+  if (q.get('reset')) { store(KEY, ''); store(KKEY, ''); }
+  var site = clean(q.get('a')) || clean(read(KEY));
+  if (clean(q.get('a'))) store(KEY, site);
+  // الرابط الخاص يُمرَّر مرة واحدة من الرابط نفسه ولا يُحفظ، حتى لا يفرض حساباً بعد الدخول بحساب آخر
+  var key = q.get('k') || '';
+  if (read(KKEY)) store(KKEY, '');
+
+  if (!site) {
+    document.getElementById('load').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+    document.getElementById('save').onclick = function () {
+      var u = clean(document.getElementById('url').value);
+      if (!u) { alert('الرابط غير صحيح. انسخ رابط الموقع كاملاً (ينتهي بـ exec).'); return; }
+      store(KEY, u);
+      location.href = location.pathname + '?a=' + encodeURIComponent(u);
+    };
+    return;
+  }
+
+  // تمرير الرابط الخاص ورمز الدعوة إلى الموقع
+  var p = [];
+  if (key) p.push('k=' + encodeURIComponent(key));
+  if (q.get('join')) p.push('join=' + encodeURIComponent(q.get('join')));
+  var f = document.getElementById('frame');
+  f.src = site + (p.length ? '?' + p.join('&') : '');
+  f.onload = function () { f.style.display = 'block'; var ld = document.getElementById('load'); ld.style.opacity = 0; setTimeout(function () { ld.style.display = 'none'; }, 400); };
+  setTimeout(function () { f.onload(); }, 9000);
+
+  // إرشاد التثبيت لمن فتح الصفحة في المتصفح
+  var dismissed = read('adw_hint') === '1';
+  var hint = document.getElementById('hint'), htx = document.getElementById('htx');
+  document.getElementById('hx').onclick = function () { hint.style.display = 'none'; store('adw_hint', '1'); };
+  if (!standalone && !dismissed) {
+    if (isIOS) {
+      htx.innerHTML = '📲 <b>ثبّت أدومُها على شاشتك</b><br>اضغط زر المشاركة <b>⎋</b> في أسفل سفاري، ثم <b>«إضافة إلى الشاشة الرئيسية»</b>.';
+      setTimeout(function () { hint.style.display = 'block'; }, 2500);
+    } else {
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        htx.innerHTML = '📲 <b>ثبّت أدومُها على شاشتك</b><br>ليفتح كالتطبيق بأيقونته الخاصة.<button class="inst" id="inst">تثبيت</button>';
+        hint.style.display = 'block';
+        document.getElementById('inst').onclick = function () { e.prompt(); hint.style.display = 'none'; };
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
